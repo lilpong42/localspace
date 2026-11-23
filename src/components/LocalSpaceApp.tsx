@@ -1,12 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import {
-  BarChart2,
-  Building2,
-  LayoutDashboard,
-  Printer,
-} from 'lucide-react';
+import { BarChart2, LayoutDashboard, Printer } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AiVerificationPanel,
@@ -16,6 +11,7 @@ import { CandidateComparisonBoard } from '@/components/CandidateComparisonBoard'
 import { CriteriaAndPresetBar } from '@/components/CriteriaAndPresetBar';
 import { DataVerificationTab } from '@/components/DataVerificationTab';
 import { GuardrailStrip } from '@/components/GuardrailStrip';
+import { HannyangEmblem } from '@/components/HannyangEmblem';
 import { PrintConsultationReport } from '@/components/PrintConsultationReport';
 import { compareCandidates } from '@/lib/compareEngine';
 import { PRESET_SCENARIOS } from '@/lib/presets';
@@ -249,25 +245,28 @@ export function LocalSpaceApp({
 
   return (
     <>
-      <div className="no-print min-h-screen flex flex-col bg-slate-50">
-        {/* 상단 브랜드 헤더 & 탭 내비게이션 */}
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-xs">
+      <div className="no-print min-h-screen flex flex-col bg-[#F2F4F8]">
+        {/* 상단 정밀 내비게이션 바 (한냥 Studio · 한냥 AirGuard 패밀리 룩: 한냥 엽전 로고 + 2대 뷰 탭) */}
+        <header className="sticky top-0 z-30 border-b border-slate-200/90 bg-white/95 backdrop-blur-xs">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-xs">
-                <Building2 className="h-5 w-5" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center">
+                <HannyangEmblem size={36} />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-base font-bold tracking-tight text-slate-900">
-                    로컬스페이스 <span className="font-normal text-slate-400">LocalSpace</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-[17px] font-extrabold tracking-tight text-[#0F172A]">
+                    한냥 <span className="font-bold text-[#92400E]">LocalSpace</span>
                   </h1>
-                  <span className="hidden rounded bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 sm:inline-block">
+                  <span className="inline-flex items-center rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2.5 py-0.5 text-[11px] font-bold text-[#92400E]">
+                    창업 공간 비교
+                  </span>
+                  <span className="hidden rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 lg:inline-block">
                     제1회 동양AI빅데이터융합 공모전 · 팀 호날두의 아이들
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  공공데이터와 실매물 조건·현장 메모를 연결한 예비 창업자 맞춤형 공간 비교 검증 플랫폼
+                  공공데이터와 실매물 조건·현장 메모를 연결한 예비 창업자 맞춤형 공간 비교 AI 플랫폼
                 </p>
               </div>
             </div>
@@ -388,8 +387,11 @@ export function LocalSpaceApp({
         {/* 푸터 */}
         <footer className="mt-8 border-t border-slate-200 bg-white">
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2 px-4 py-4 text-[11px] text-slate-500 sm:px-6">
-            <div>
-              <strong className="text-slate-700">로컬스페이스 (LocalSpace)</strong> · 제1회 동양AI빅데이터융합 아이디어 공모전 출품 프로토타입 (팀명: 호날두의 아이들)
+            <div className="flex items-center gap-2">
+              <HannyangEmblem size={18} />
+              <span>
+                <strong className="text-slate-800">한냥 LocalSpace</strong> (Hannyang 시리즈) · 제1회 동양AI빅데이터융합 아이디어 공모전 출품 프로토타입 (팀명: 호날두의 아이들)
+              </span>
             </div>
             <div>
               근거 없는 매출·성공률 예측 배제 · 공공 상권({meta.totalCommercialRows}건 샘플 인덱스) & 행정동 거주인구({meta.totalAdminDongs}개 구역)

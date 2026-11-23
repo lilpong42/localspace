@@ -77,9 +77,11 @@ function exportHighDpiChartPng(
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, out.width, out.height);
 
-  // Subtle top bar accent
-  ctx.fillStyle = '#0f172a';
-  ctx.fillRect(0, 0, out.width, 6 * scale);
+  // Hannyang Family Look top accent bar (Obsidian + Yeopjeon Gold)
+  ctx.fillStyle = '#0b0f17';
+  ctx.fillRect(0, 0, out.width, 5 * scale);
+  ctx.fillStyle = '#d97706';
+  ctx.fillRect(0, 5 * scale, Math.round(out.width * 0.28), 3 * scale);
 
   // Title & subtitle
   ctx.fillStyle = '#0f172a';
@@ -410,10 +412,10 @@ export function DataVerificationTab({
               onClick={() =>
                 exportHighDpiChartPng(
                   chart1Ref.current,
-                  `localspace_chart1_industry_${comparison.evalA.commercial.radiusMeters}m.png`,
+                  `hannyang_localspace_chart1_industry_${comparison.evalA.commercial.radiusMeters}m.png`,
                   `후보 A vs 후보 B 반경 ${comparison.evalA.commercial.radiusMeters}m 업종 분포 비교`,
                   `후보 A: ${candidateA.name} (${candidateA.industry})  |  후보 B: ${candidateB.name} (${candidateB.industry})`,
-                  `출처: ${meta.commercialSource} (${meta.commercialReferenceDate}) · 상권=반경 기준 / 인구=행정구역 단위 기준 · LocalSpace`
+                  `출처: ${meta.commercialSource} (${meta.commercialReferenceDate}) · 상권=반경 기준 / 인구=행정구역 단위 기준 · 한냥 LocalSpace`
                 )
               }
               className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100"
@@ -447,12 +449,12 @@ export function DataVerificationTab({
               onClick={() =>
                 exportHighDpiChartPng(
                   chart2Ref.current,
-                  `localspace_chart2_metrics_${comparison.evalA.commercial.radiusMeters}m.png`,
+                  `hannyang_localspace_chart2_metrics_${comparison.evalA.commercial.radiusMeters}m.png`,
                   '후보 A vs 후보 B 평당 월 고정비 · 전용면적 · 동종 밀집도 비교',
                   `후보 A: ${candidateA.name} (${candidateA.industry})  |  후보 B: ${candidateB.name} (${candidateB.industry})`,
                   comparison.industryMismatch
-                    ? '주의: 비교 업종이 서로 다릅니다. 단순 점포 수·밀집도만으로 유불리를 판단하지 마세요 · LocalSpace'
-                    : `출처: 입력 실매물 조건 + ${meta.commercialSource} (${meta.commercialReferenceDate}) · LocalSpace`
+                    ? '주의: 비교 업종이 서로 다릅니다. 단순 점포 수·밀집도만으로 유불리를 판단하지 마세요 · 한냥 LocalSpace'
+                    : `출처: 입력 실매물 조건 + ${meta.commercialSource} (${meta.commercialReferenceDate}) · 한냥 LocalSpace`
                 )
               }
               className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100"

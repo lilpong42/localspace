@@ -17,9 +17,19 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: '로컬스페이스 (LocalSpace) — 공공데이터·실매물 연계 창업 공간 비교 AI 플랫폼',
+  title: '한냥 LocalSpace — 공공데이터·실매물 연계 창업 공간 비교 AI 플랫폼',
   description:
-    '공공 상권·인구 통계와 실제 매물 조건, 현장 임장 메모를 한 화면에서 객관적으로 대조하고 현장 확인 질문을 정리하는 예비 창업자·지자체 창업상담 실무 웹 플랫폼',
+    '한냥(Hannyang) 시리즈 · 공공 상권·인구 통계와 실제 매물 조건, 현장 임장 메모를 한 화면에서 객관적으로 대조하고 임대인 확인 질문을 정리하는 예비 창업자 맞춤형 공간 비교 플랫폼',
+  openGraph: {
+    title: '한냥 LocalSpace — 창업 공간 비교 AI 플랫폼',
+    description:
+      '공공 상권·거주인구 데이터와 실매물 조건·현장 메모를 연결한 객관적 공간 비교 검증 대시보드',
+    locale: 'ko_KR',
+    type: 'website',
+  },
+  icons: {
+    apple: '/icons/icon-192.png',
+  },
 };
 
 export default function RootLayout({
@@ -32,7 +42,7 @@ export default function RootLayout({
       lang="ko"
       className={`${notoSansKr.variable} ${jetBrainsMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-slate-50 text-slate-900 selection:bg-blue-100 selection:text-blue-900">
+      <body className="min-h-full bg-[#F2F4F8] text-slate-900 selection:bg-amber-100 selection:text-amber-950">
         {children}
       </body>
     </html>

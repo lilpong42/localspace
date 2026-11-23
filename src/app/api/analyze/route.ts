@@ -18,7 +18,7 @@ interface AnalyzeRequestBody {
 
 const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
-const SYSTEM_INSTRUCTION = `당신은 예비 창업자 및 지자체·대학 창업상담 멘토를 지원하는 공간 비교 검증 어시스턴트 '로컬스페이스(LocalSpace)'입니다.
+const SYSTEM_INSTRUCTION = `당신은 예비 창업자 및 지자체·대학 창업상담 멘토를 지원하는 공간 비교 검증 어시스턴트 '한냥 LocalSpace (로컬스페이스)'입니다.
 
 [필수 준수 원칙 — 절대 위반 금지]
 1. 예상 매출액, 월 순수익, 손익분기점(BEP), 창업 성공 확률, 기대 수익률 등 근거 없는 수치 예측을 절대 생성하지 마세요.

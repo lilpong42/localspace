@@ -4,6 +4,7 @@ import {
   type ChecklistProgressMap,
   getChecklistItemKey,
 } from '@/components/AiVerificationPanel';
+import { HannyangEmblem } from '@/components/HannyangEmblem';
 import { formatSigned } from '@/lib/compareEngine';
 import type {
   AiAnalyzeResponse,
@@ -37,20 +38,24 @@ export function PrintConsultationReport({
   const { evalA, evalB, diffs, industryMismatch, industryMismatchMessage } =
     comparison;
   const analysis = aiResponse?.analysis ?? null;
-  const printDate = printedAt || aiResponse?.generatedAt?.slice(0, 10) || meta.commercialReferenceDate;
+  const printDate =
+    printedAt || aiResponse?.generatedAt?.slice(0, 10) || meta.commercialReferenceDate;
 
   return (
     <div className="print-only hidden bg-white text-slate-900">
       {/* 리포트 헤더 */}
-      <header className="border-b-2 border-slate-900 pb-3">
+      <header className="border-b-2 border-[#0B0F17] pb-3">
         <div className="flex items-end justify-between">
-          <div>
-            <div className="text-[10px] font-semibold tracking-wider text-slate-500">
-              LOCALSPACE CONSULTATION REPORT · 제1회 동양AI빅데이터융합 아이디어 공모전
+          <div className="flex items-center gap-2.5">
+            <HannyangEmblem size={34} />
+            <div>
+              <div className="text-[10px] font-semibold tracking-wider text-[#92400E]">
+                HANNYANG LOCALSPACE CONSULTATION REPORT · 제1회 동양AI빅데이터융합 아이디어 공모전
+              </div>
+              <h1 className="mt-0.5 text-xl font-bold text-slate-900">
+                한냥 LocalSpace 창업 공간 비교 상담 리포트
+              </h1>
             </div>
-            <h1 className="mt-1 text-xl font-bold text-slate-900">
-              로컬스페이스 (LocalSpace) 창업 공간 비교 상담 리포트
-            </h1>
           </div>
           <div className="text-right text-[10px] text-slate-600">
             <div>출력일자: {printDate}</div>

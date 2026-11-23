@@ -32,7 +32,7 @@ export async function GET() {
 
   return NextResponse.json({
     status: 'ok',
-    service: 'LocalSpace (로컬스페이스)',
+    service: '한냥 LocalSpace (Hannyang LocalSpace)',
     timestamp: new Date().toISOString(),
     apis: {
       gemini: {

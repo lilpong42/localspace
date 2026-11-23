@@ -1,7 +1,8 @@
-# 로컬스페이스 (LocalSpace)
+# 한냥 LocalSpace (Hannyang LocalSpace · 로컬스페이스)
 > 공공데이터와 실제 매물 조건·현장 메모를 연결한 예비 창업자 맞춤형 공간 비교 AI 웹 플랫폼
 
-**출품 정보:** 제1회 동양AI빅데이터융합 아이디어 공모전 (AI빅데이터분야 / 팀명: 호날두의 아이들)  
+**출품 정보:** 제1회 동양AI빅데이터융합 아이디어 공모전 (AI빅데이터분야 / 팀명: 호날두의 아이들 · 한냥 시리즈)  
+**라이브 서비스:** https://hannyang-localspace.vercel.app  
 **GitHub 저장소:** https://github.com/lilpong42/localspace
 
 ---
