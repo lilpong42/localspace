@@ -1,7 +1,8 @@
 # 로컬스페이스 (LocalSpace)
 > 공공데이터와 실제 매물 조건·현장 메모를 연결한 예비 창업자 맞춤형 공간 비교 AI 웹 플랫폼
 
-**출품 정보:** 제1회 동양AI빅데이터융합 아이디어 공모전 (AI빅데이터분야 / 팀명: 호날두의 아이들)
+**출품 정보:** 제1회 동양AI빅데이터융합 아이디어 공모전 (AI빅데이터분야 / 팀명: 호날두의 아이들)  
+**GitHub 저장소:** https://github.com/lilpong42/localspace
 
 ---
 
@@ -12,23 +13,26 @@
 
 ---
 
-## 주요 모듈
-- **모듈 A (창업 기준 & 원클릭 1분 시연 프리셋 3종):** 비용 vs 면적 딜레마 / 지방 중소도시 빈점포 활성화 / 비교 오류 경고 시연(업종 상이) + 300m/500m 반경 전환
-- **모듈 B (후보 A vs B 병렬 비교 보드 & Leaflet 지도):** 좌/우 대조 카드, 평↔㎡ 자동 환산, 내장 주소 퀵 피커 및 좌표 직접 입력, 반경 원형 영역 및 주변 점포 마커 시각화
-- **모듈 C (정량 정합성 진단 엔진):** 월 고정비(월세+관리비), 보증금 환산 참고치(연 5%), 평당 월 고정비, 초기 투입 합계, 동종 업종 밀집도(%) 및 Pass/Warn/Fail 진단
-- **모듈 D (근거 기반 AI 비교·검증 & 임장 체크리스트):** Next.js 서버 라우트(`/api/analyze`)에서 Gemini API 호출(Structured JSON) + 무중단 로컬 폴백 엔진(`LIVE GEMINI AI` / `SAFE FALLBACK`), 체크박스 및 현장 답변 메모 `localStorage` 자동 저장
-- **모듈 E (데이터 검증·고해상도 차트 & A4 상담 리포트):** 2x 고해상도 PNG 차트 다운로드 2종, 원본 샘플 상가 데이터 테이블, `public/data.csv` 및 `public/analysis.R` 열람·다운로드 모달, 원클릭 A4 인쇄/PDF 리포트
+## 서버리스 API 아키텍처 (`/src/app/api`)
+| 엔드포인트 | 역할 | 라이브 키 연결 시 | 키 미설정 시 (무중단 폴백) |
+| --- | --- | --- | --- |
+| `POST /api/analyze` | 근거 기반 AI 비교·검증 및 임대인 체크리스트 JSON 생성 | `GEMINI_API_KEY` (`AQ.` 신형 키, `x-goog-api-key` 헤더) → `LIVE GEMINI AI` | 내장 규칙 기반 근거 분석 엔진 (`SAFE FALLBACK`) |
+| `GET /api/commercial` | 좌표 기준 반경 300m/500m 상가업소 집계 | `DATA_GO_KR_API_KEY` → 소상공인시장진흥공단 실시간 OpenAPI | `data/commercial_sample.csv` 로컬 인덱스 |
+| `GET /api/geocode` | 도로명/지번 주소 → 위도·경도·행정동 변환 | `KAKAO_REST_API_KEY` → 카카오 로컬 REST API | 내장 시연 좌표 + OpenStreetMap Nominatim |
+| `GET /api/health` | 서버 API 연동 상태 및 데이터셋 메타 확인 | 키 값은 노출하지 않고 설정 여부·모드만 안전 반환 | 동일 |
 
 ---
 
-## 실행 및 환경변수 설정 (2026 신형 `AQ.` Gemini API 키 지원)
+## 실행 및 Vercel 배포 설정 (2026 신형 `AQ.` Gemini API 키 지원)
 
 ```bash
 npm install
 cp .env.example .env.local
-# .env.local에 GEMINI_API_KEY 설정 (미설정 시 SAFE FALLBACK 모드로 무중단 동작)
+# .env.local에 GEMINI_API_KEY 등 설정 (미설정 시에도 SAFE FALLBACK으로 즉시 시연 가능)
 npm run dev
 ```
 
-- **보안 및 호출 규격:** `/api/analyze` 서버 라우트에서만 `process.env.GEMINI_API_KEY`를 읽으며, `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent` 엔드포인트에 `x-goog-api-key` HTTP 헤더로만 전송합니다.
-- **Vercel 배포:** Vercel 프로젝트의 `Environment Variables`에 `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-2.5-flash`를 등록하면 별도 설정 없이 즉시 배포됩니다.
+- **Vercel 배포:** [lilpong42/localspace](https://github.com/lilpong42/localspace)를 Vercel에서 Import한 뒤, `Project Settings → Environment Variables`에 아래 변수를 추가하면 됩니다.
+  - `GEMINI_API_KEY`: `AQ.`로 시작하는 Google AI Studio API 키
+  - `GEMINI_MODEL`: `gemini-2.5-flash`
+  - *(선택)* `DATA_GO_KR_API_KEY`, `KAKAO_REST_API_KEY`

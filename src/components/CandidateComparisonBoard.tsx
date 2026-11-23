@@ -7,9 +7,11 @@ import {
   CheckCircle2,
   MapPin,
   Scale,
+  Search,
   Store,
   Users,
 } from 'lucide-react';
+import { useState } from 'react';
 import {
   formatSigned,
   getCategoryRatioList,
@@ -94,9 +96,13 @@ function CandidateCard({
   const categoryRatios = getCategoryRatioList(evaluation.commercial);
   const maxCatCount = Math.max(1, ...categoryRatios.map((c) => c.count));
 
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeMsg, setGeocodeMsg] = useState<string | null>(null);
+
   const handleQuickAddress = (addressValue: string) => {
     const found = QUICK_ADDRESS_OPTIONS.find((opt) => opt.address === addressValue);
     if (!found) return;
+    setGeocodeMsg(null);
     onChange({
       ...candidate,
       address: found.address,
@@ -104,6 +110,48 @@ function CandidateCard({
       lat: found.lat,
       lng: found.lng,
     });
+  };
+
+  const handleGeocodeSearch = async () => {
+    const q = candidate.address.trim();
+    if (q.length < 2) return;
+    setGeocoding(true);
+    setGeocodeMsg(null);
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      if (!res.ok) throw new Error('geocode failed');
+      const data = (await res.json()) as {
+        results?: Array<{
+          address: string;
+          adminDongKey: string;
+          lat: number;
+          lng: number;
+          source: string;
+        }>;
+      };
+      const first = data.results?.[0];
+      if (!first) {
+        setGeocodeMsg('일치하는 주소를 찾지 못했습니다. 위도·경도를 직접 수정해 주세요.');
+        return;
+      }
+      const matchedPop = populations.find(
+        (p) =>
+          p.key === first.adminDongKey ||
+          (first.adminDongKey && first.adminDongKey.includes(p.adminDong))
+      );
+      onChange({
+        ...candidate,
+        address: first.address,
+        adminDongKey: matchedPop ? matchedPop.key : candidate.adminDongKey,
+        lat: first.lat,
+        lng: first.lng,
+      });
+      setGeocodeMsg(`좌표 반영 완료 (${first.source})`);
+    } catch {
+      setGeocodeMsg('주소 검색 중 일시적 오류가 발생했습니다.');
+    } finally {
+      setGeocoding(false);
+    }
   };
 
   return (
@@ -179,15 +227,39 @@ function CandidateCard({
           </div>
 
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <label className="flex flex-col gap-1 sm:col-span-2">
-              <span className="text-[11px] text-slate-500">도로명 주소 (직접 입력 가능)</span>
-              <input
-                type="text"
-                value={candidate.address}
-                onChange={(e) => onChange({ ...candidate, address: e.target.value })}
-                className="h-8 rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 text-xs text-slate-900 outline-none focus:border-blue-500 focus:bg-white"
-              />
-            </label>
+            <div className="flex flex-col gap-1 sm:col-span-2">
+              <span className="text-[11px] text-slate-500">
+                도로명 주소 (직접 입력 후 좌표 검색 가능)
+              </span>
+              <div className="flex gap-1.5">
+                <input
+                  type="text"
+                  value={candidate.address}
+                  onChange={(e) =>
+                    onChange({ ...candidate, address: e.target.value })
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void handleGeocodeSearch();
+                    }
+                  }}
+                  className="h-8 flex-1 rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 text-xs text-slate-900 outline-none focus:border-blue-500 focus:bg-white"
+                />
+                <button
+                  type="button"
+                  disabled={geocoding}
+                  onClick={() => void handleGeocodeSearch()}
+                  className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50"
+                >
+                  <Search className="h-3 w-3" />
+                  {geocoding ? '검색중' : '좌표 검색'}
+                </button>
+              </div>
+              {geocodeMsg && (
+                <span className="text-[10.5px] text-slate-500">{geocodeMsg}</span>
+              )}
+            </div>
 
             <label className="flex flex-col gap-1">
               <span className="text-[11px] text-slate-500">행정동 (거주인구 기준)</span>
