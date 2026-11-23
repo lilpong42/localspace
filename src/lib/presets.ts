@@ -1,0 +1,228 @@
+import type { PresetScenario } from './types';
+
+export interface QuickAddressOption {
+  label: string;
+  address: string;
+  adminDongKey: string;
+  lat: number;
+  lng: number;
+  regionTag: string;
+}
+
+/**
+ * 카카오 주소 검색 API 키 없이도 즉시 주소·좌표 선택 및 시연이 가능한 내장 지오코딩 퀵 피커
+ */
+export const QUICK_ADDRESS_OPTIONS: QuickAddressOption[] = [
+  {
+    label: '경북 영주시 가흥1동 이면도로 (가흥로 142번길 18)',
+    address: '경상북도 영주시 가흥로 142번길 18',
+    adminDongKey: '경상북도 영주시 가흥1동',
+    lat: 36.8152,
+    lng: 128.6098,
+    regionTag: '영주 신도심 이면',
+  },
+  {
+    label: '경북 영주시 가흥1동 택지 중심대로변 (대학로 284)',
+    address: '경상북도 영주시 대학로 284',
+    adminDongKey: '경상북도 영주시 가흥1동',
+    lat: 36.8126,
+    lng: 128.6134,
+    regionTag: '영주 신도심 대로변',
+  },
+  {
+    label: '경북 영주시 영주1동 구도심 문화의거리 (구성로 350번길 12)',
+    address: '경상북도 영주시 구성로 350번길 12',
+    adminDongKey: '경상북도 영주시 영주1동',
+    lat: 36.824,
+    lng: 128.6225,
+    regionTag: '영주 구도심 빈점포',
+  },
+  {
+    label: '경북 영주시 가흥2동 신도심 복합상가 (가흥로 98)',
+    address: '경상북도 영주시 가흥로 98',
+    adminDongKey: '경상북도 영주시 가흥2동',
+    lat: 36.8178,
+    lng: 128.6062,
+    regionTag: '영주 가흥2동',
+  },
+  {
+    label: '경기 동두천시 송내동 지행역 서측 (지행로 58)',
+    address: '경기도 동두천시 지행로 58',
+    adminDongKey: '경기도 동두천시 송내동',
+    lat: 37.8924,
+    lng: 127.0558,
+    regionTag: '동두천 지행역 서측',
+  },
+  {
+    label: '경기 동두천시 생연2동 지행역 동측 (중앙로 124)',
+    address: '경기도 동두천시 중앙로 124',
+    adminDongKey: '경기도 동두천시 생연2동',
+    lat: 37.8946,
+    lng: 127.0588,
+    regionTag: '동두천 지행역 동측',
+  },
+  {
+    label: '서울 마포구 연남동 (동교로 243)',
+    address: '서울특별시 마포구 동교로 243',
+    adminDongKey: '서울특별시 마포구 연남동',
+    lat: 37.5618,
+    lng: 126.9245,
+    regionTag: '서울 연남동 참고',
+  },
+];
+
+export const PRESET_SCENARIOS: PresetScenario[] = [
+  {
+    id: 'preset1',
+    shortLabel: '프리셋 1',
+    title: '비용 vs 면적 딜레마',
+    subtitle: '동일 업종(카페) · 저비용 협소 점포 A vs 고비용 광역 점포 B',
+    demoPoint: '보증금·월세는 충족하지만 면적이 좁은 A와, 면적은 넉넉하나 월세 초과·카페 과밀인 B의 트레이드오프 대조',
+    criteria: {
+      targetIndustry: '카페',
+      maxDeposit: 3000,
+      maxMonthlyRent: 150,
+      minAreaPyeong: 12,
+      requireFirstFloor: true,
+      radiusMeters: 300,
+    },
+    candidateA: {
+      slot: 'A',
+      name: '가흥1동 이면도로 소형 코너점포',
+      address: '경상북도 영주시 가흥로 142번길 18',
+      adminDongKey: '경상북도 영주시 가흥1동',
+      lat: 36.8152,
+      lng: 128.6098,
+      industry: '카페',
+      deposit: 1500,
+      monthlyRent: 95,
+      maintenanceFee: 10,
+      areaPyeong: 9.5,
+      floor: '1층',
+      keyMoney: 800,
+      repairCost: 1200,
+      fieldNotes:
+        '이면도로라 저녁 시간대 보행 유입이 줄어듦. 테이크아웃 창구 설치는 가능하나 내부 좌석 8석 한계. 배수관 노후 흔적이 있어 바닥 방수 재시공 및 수도 계량기 분리 여부 임대인 확인 필요. 전면 주차 1대 가능.',
+    },
+    candidateB: {
+      slot: 'B',
+      name: '가흥택지 중심대로변 중형 상가',
+      address: '경상북도 영주시 대학로 284',
+      adminDongKey: '경상북도 영주시 가흥1동',
+      lat: 36.8126,
+      lng: 128.6134,
+      industry: '카페',
+      deposit: 3000,
+      monthlyRent: 175,
+      maintenanceFee: 22,
+      areaPyeong: 18.5,
+      floor: '1층',
+      keyMoney: 2000,
+      repairCost: 600,
+      fieldNotes:
+        '전면 통유리 개방감이 우수하고 신축급이라 전기 증설(15kW) 완료됨. 다만 반경 300m 내 저가 프랜차이즈 커피 3곳 인접. 관리비에 공용 냉난방비 포함 여부와 인테리어 기간 렌트프리(무상임대) 1개월 협의 가능성 확인 필요.',
+    },
+  },
+  {
+    id: 'preset2',
+    shortLabel: '프리셋 2',
+    title: '지방 중소도시 빈점포 활성화',
+    subtitle: '영주 구도심 무권리 유휴 점포 A vs 가흥 신도심 복합상가 B',
+    demoPoint: '지자체·대학 창업지원 상담 핵심 사례: 구도심 저고정비·고수리비 구조 vs 신도심 고고정비·설비 승계 구조 비교',
+    criteria: {
+      targetIndustry: '소형 음식점',
+      maxDeposit: 2500,
+      maxMonthlyRent: 130,
+      minAreaPyeong: 14,
+      requireFirstFloor: true,
+      radiusMeters: 300,
+    },
+    candidateA: {
+      slot: 'A',
+      name: '영주1동 문화의거리 빈점포 재생 상가',
+      address: '경상북도 영주시 구성로 350번길 12',
+      adminDongKey: '경상북도 영주시 영주1동',
+      lat: 36.824,
+      lng: 128.6225,
+      industry: '소형 음식점',
+      deposit: 1000,
+      monthlyRent: 65,
+      maintenanceFee: 5,
+      areaPyeong: 16,
+      floor: '1층',
+      keyMoney: 0,
+      repairCost: 2400,
+      fieldNotes:
+        '8개월 공실 상태의 구도심 1층 빈점포(무권리). 지자체 빈점포 리모델링 지원사업 연계 가능 여부 확인 중. 도시가스 배관은 인입되어 있으나 주방 배기 덕트 옥상 연결 동의 및 정화조 용량 증설 필요 여부 필수 확인. 전통시장 공영주차장 도보 3분.',
+    },
+    candidateB: {
+      slot: 'B',
+      name: '가흥2동 신도심 복합상가 1층',
+      address: '경상북도 영주시 가흥로 98',
+      adminDongKey: '경상북도 영주시 가흥2동',
+      lat: 36.8178,
+      lng: 128.6062,
+      industry: '소형 음식점',
+      deposit: 2500,
+      monthlyRent: 140,
+      maintenanceFee: 18,
+      areaPyeong: 14.5,
+      floor: '1층',
+      keyMoney: 1500,
+      repairCost: 700,
+      fieldNotes:
+        '기존 분식집 운영 중이라 주방 후드·그리스트랩 설비 승계 가능(권리금 포함). 아파트 단지 배후 접근성은 양호하나 점심·저녁 피크 외 한산함. 퇴거 시 원상복구 특약 범위와 권리금 양도 시설 목록 서면 확인 필요.',
+    },
+  },
+  {
+    id: 'preset3',
+    shortLabel: '프리셋 3',
+    title: '비교 오류 경고 시연',
+    subtitle: '업종 상이 케이스 · 후보 A(카페) vs 후보 B(소형 음식점)',
+    demoPoint: '서로 다른 업종을 단순 점포 수로 비교할 때 자동 작동하는 비교 오류 방지 가드레일과 맞춤형 AI 주의사항 시연',
+    criteria: {
+      targetIndustry: '카페',
+      maxDeposit: 3500,
+      maxMonthlyRent: 160,
+      minAreaPyeong: 13,
+      requireFirstFloor: false,
+      radiusMeters: 300,
+    },
+    candidateA: {
+      slot: 'A',
+      name: '지행역 서측 2층 통창 카페 후보',
+      address: '경기도 동두천시 지행로 58',
+      adminDongKey: '경기도 동두천시 송내동',
+      lat: 37.8924,
+      lng: 127.0558,
+      industry: '카페',
+      deposit: 2000,
+      monthlyRent: 115,
+      maintenanceFee: 15,
+      areaPyeong: 17,
+      floor: '2층',
+      keyMoney: 500,
+      repairCost: 1100,
+      fieldNotes:
+        '엘리베이터 있는 2층 코너 상가. 외부 돌출 간판 및 1층 입구 배너 설치 가능 여부 상가 관리단 확인 필요. 통창 채광이 우수해 체류형 카페에 적합하나 1층 즉흥 유입 고객 확보에는 한계.',
+    },
+    candidateB: {
+      slot: 'B',
+      name: '지행역 동측 1층 소형 음식점 후보',
+      address: '경기도 동두천시 중앙로 124',
+      adminDongKey: '경기도 동두천시 생연2동',
+      lat: 37.8946,
+      lng: 127.0588,
+      industry: '소형 음식점',
+      deposit: 3000,
+      monthlyRent: 155,
+      maintenanceFee: 20,
+      areaPyeong: 14,
+      floor: '1층',
+      keyMoney: 1800,
+      repairCost: 900,
+      fieldNotes:
+        '1층 대로변 가시성은 높으나 일반음식점 용도 변경 시 정화조 용량 및 배기 덕트 인근 민원 우려. 카페 후보 A와 업종·설비 요건이 완전히 다르므로 단순 점포 수 비교 대신 초기 인허가·설비 리스크 중심으로 분리 검토 필요.',
+    },
+  },
+];

@@ -1,0 +1,7 @@
+preset_id,preset_name,candidate_slot,candidate_name,sido,sigungu,admin_dong,business_type,deposit_manwon,monthly_rent_manwon,maintenance_fee_manwon,monthly_fixed_cost_manwon,area_pyeong,area_sqm,cost_per_pyeong_manwon,floor,key_money_manwon,repair_cost_manwon,radius_m,total_stores_in_radius,same_industry_stores,same_industry_density_pct,cafe_cnt,food_cnt,retail_cnt,service_cnt,edu_cnt,med_cnt,resident_pop,age20_30_pct,age50plus_pct,data_reference_date
+preset1,비용 vs 면적 딜레마,A,가흥1동 이면도로 소형 코너점포,경상북도,영주시,가흥1동,카페,1500,95,10,105,9.5,31.4,11.05,1층,800,1200,300,53,10,18.9,10,16,11,7,5,4,24680,26.1,39.1,2026-06
+preset1,비용 vs 면적 딜레마,B,가흥택지 중심대로변 중형 상가,경상북도,영주시,가흥1동,카페,3000,175,22,197,18.5,61.2,10.65,1층,2000,600,300,59,16,27.1,16,15,9,6,7,6,24680,26.1,39.1,2026-06
+preset2,지방 중소도시 빈점포 활성화,A,영주1동 문화의거리 빈점포 재생 상가,경상북도,영주시,영주1동,소형 음식점,1000,65,5,70,16.0,52.9,4.38,1층,0,2400,300,38,9,23.7,4,9,12,8,2,3,6840,17.5,61.1,2026-06
+preset2,지방 중소도시 빈점포 활성화,B,가흥2동 신도심 복합상가 1층,경상북도,영주시,가흥2동,소형 음식점,2500,140,18,158,14.5,47.9,10.90,1층,1500,700,300,47,14,29.8,7,14,8,5,8,5,11840,24.5,41.6,2026-06
+preset3,비교 오류 경고 시연 (업종 상이),A,지행역 서측 2층 통창 카페 후보,경기도,동두천시,송내동,카페,2000,115,15,130,17.0,56.2,7.65,2층,500,1100,300,54,12,22.2,12,15,9,6,7,5,28940,26.7,39.5,2026-06
+preset3,비교 오류 경고 시연 (업종 상이),B,지행역 동측 1층 소형 음식점 후보,경기도,동두천시,생연2동,소형 음식점,3000,155,20,175,14.0,46.3,12.50,1층,1800,900,300,53,19,35.8,6,19,9,7,6,6,14760,23.0,49.2,2026-06
