@@ -7,6 +7,7 @@ import {
   AiVerificationPanel,
   type ChecklistProgressMap,
 } from '@/components/AiVerificationPanel';
+import { AppHeroBanner } from '@/components/AppHeroBanner';
 import { CandidateComparisonBoard } from '@/components/CandidateComparisonBoard';
 import { CandidateEditModal } from '@/components/CandidateEditModal';
 import { CriteriaAndPresetBar } from '@/components/CriteriaAndPresetBar';
@@ -338,6 +339,22 @@ export function LocalSpaceApp({
 
         {/* 메인 컨텐츠 */}
         <main className="mx-auto w-full max-w-[1220px] flex-1 space-y-6 px-4 py-6 sm:px-6">
+          {/* 첫 화면 3초 이해 히어로 배너 + 지금 비교 중인 2곳 라이브 요약 */}
+          <AppHeroBanner
+            candidateA={candidateA}
+            candidateB={candidateB}
+            comparison={comparison}
+            onStartCustomInput={() => setEditingSlot('A')}
+            onJumpToCompare={() => {
+              setActiveTab('dashboard');
+              window.setTimeout(() => {
+                document
+                  .getElementById('compare-section')
+                  ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 30);
+            }}
+          />
+
           {/* STEP 1: 내 창업 조건 설정 + 자동 매칭 + 매물 풀 + 프리셋 */}
           <CriteriaAndPresetBar
             activePresetId={activePresetId}
@@ -363,7 +380,7 @@ export function LocalSpaceApp({
           />
 
           {activeTab === 'dashboard' ? (
-            <>
+            <div id="compare-section" className="space-y-6 scroll-mt-20">
               {/* STEP 2: 후보 A vs B 한눈에 비교 카드 + 격차 비교표 */}
               <CandidateComparisonBoard
                 criteria={criteria}
@@ -392,7 +409,7 @@ export function LocalSpaceApp({
                 onReanalyze={() => void runAnalysis(criteria, candidateA, candidateB)}
                 onPrintReport={handlePrintReport}
               />
-            </>
+            </div>
           ) : (
             <DataVerificationTab
               candidateA={candidateA}

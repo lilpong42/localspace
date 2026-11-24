@@ -162,7 +162,7 @@ function CandidateSummaryCard({
       {/* 핵심 숫자 3개 — 내 기준 대비 충족/초과 상태를 색상·격차로 즉각 표시 */}
       <div className="mt-5 grid grid-cols-3 gap-2.5">
         <div className={`rounded-xl border p-3.5 transition ${kpiBoxStyle(rentCheck?.status)}`}>
-          <div className="text-xs font-medium text-slate-600">월 고정비</div>
+          <div className="text-xs font-medium text-slate-600">매달 나가는 돈</div>
           <div className="mt-1 text-xl font-extrabold tabular-nums text-slate-900 sm:text-2xl">
             {evaluation.monthlyFixedCost.toLocaleString()}
             <span className="ml-0.5 text-xs font-semibold text-slate-500">만원</span>
@@ -175,7 +175,7 @@ function CandidateSummaryCard({
         </div>
 
         <div className={`rounded-xl border p-3.5 transition ${kpiBoxStyle(areaCheck?.status)}`}>
-          <div className="text-xs font-medium text-slate-600">전용면적</div>
+          <div className="text-xs font-medium text-slate-600">가게 크기</div>
           <div className="mt-1 text-xl font-extrabold tabular-nums text-slate-900 sm:text-2xl">
             {candidate.areaPyeong}
             <span className="ml-0.5 text-xs font-semibold text-slate-500">평</span>
@@ -188,7 +188,7 @@ function CandidateSummaryCard({
         </div>
 
         <div className={`rounded-xl border p-3.5 transition ${kpiBoxStyle(depositCheck?.status)}`}>
-          <div className="text-xs font-medium text-slate-600">보증금 · 초기금</div>
+          <div className="text-xs font-medium text-slate-600">보증금 · 처음 돈</div>
           <div className="mt-1 text-xl font-extrabold tabular-nums text-slate-900 sm:text-2xl">
             {candidate.deposit.toLocaleString()}
             <span className="ml-0.5 text-xs font-semibold text-slate-500">만원</span>
@@ -205,7 +205,7 @@ function CandidateSummaryCard({
       <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-            <span>내 기준 진단</span>
+            <span>내 조건에 맞나요?</span>
             <span className="font-semibold tabular-nums text-emerald-700">
               충족 {evaluation.summaryCounts.pass}
             </span>
@@ -225,7 +225,7 @@ function CandidateSummaryCard({
             onClick={() => setShowCheckDetails((v) => !v)}
             className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900"
           >
-            {showCheckDetails ? '간단히' : '상세 보기'}
+            {showCheckDetails ? '접기' : '자세히 보기'}
             {showCheckDetails ? (
               <ChevronUp className="h-3.5 w-3.5" />
             ) : (
@@ -267,16 +267,16 @@ function CandidateSummaryCard({
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
               <Store className="h-3.5 w-3.5 text-slate-400" />
-              반경 {evaluation.commercial.radiusMeters}m 상권
+              주변 {evaluation.commercial.radiusMeters}m 가게
             </span>
             <span className={`font-bold ${accentText}`}>
               {evaluation.densityLabel}
             </span>
           </div>
           <div className="mt-1.5 text-sm font-bold tabular-nums text-slate-900">
-            동종 {evaluation.commercial.sameIndustryCount}개{' '}
+            같은 업종 {evaluation.commercial.sameIndustryCount}곳{' '}
             <span className="text-xs font-semibold text-slate-500">
-              ({evaluation.commercial.sameIndustryDensityPct}% / 전체 {evaluation.commercial.totalStores}개)
+              ({evaluation.commercial.sameIndustryDensityPct}% / 전체 {evaluation.commercial.totalStores}곳)
             </span>
           </div>
         </div>
@@ -285,7 +285,7 @@ function CandidateSummaryCard({
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
               <Users className="h-3.5 w-3.5 text-slate-400" />
-              행정동 거주인구
+              이 동네 주민 수
             </span>
             <span className="text-[11px] text-slate-400">유동인구 아님</span>
           </div>
