@@ -31,6 +31,10 @@ body {
   z-index: 1;
 }
 
+#localspace-leaflet-map .leaflet-tile-pane {
+  filter: saturate(76%) brightness(102%) contrast(97%);
+}
+
 .leaflet-popup-content-wrapper {
   border-radius: 10px;
   box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14);

@@ -62,8 +62,8 @@ export default function ComparisonMap({
       scrollWheelZoom: false,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors (100% Free Open-Source)',
       maxZoom: 19,
     }).addTo(map);
 
@@ -71,7 +71,12 @@ export default function ComparisonMap({
     mapRef.current = map;
     layerGroupRef.current = group;
 
+    const resizeTimer = window.setTimeout(() => {
+      map.invalidateSize();
+    }, 120);
+
     return () => {
+      window.clearTimeout(resizeTimer);
       map.remove();
       mapRef.current = null;
       layerGroupRef.current = null;
