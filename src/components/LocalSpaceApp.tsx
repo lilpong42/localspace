@@ -8,6 +8,7 @@ import {
   type ChecklistProgressMap,
 } from '@/components/AiVerificationPanel';
 import { CandidateComparisonBoard } from '@/components/CandidateComparisonBoard';
+import { CandidateEditModal } from '@/components/CandidateEditModal';
 import { CriteriaAndPresetBar } from '@/components/CriteriaAndPresetBar';
 import { DataVerificationTab } from '@/components/DataVerificationTab';
 import { GuardrailStrip } from '@/components/GuardrailStrip';
@@ -27,8 +28,8 @@ import type {
 const ComparisonMap = dynamic(() => import('@/components/ComparisonMap'), {
   ssr: false,
   loading: () => (
-    <div className="flex h-[420px] items-center justify-center rounded-xl border border-slate-200 bg-white text-xs text-slate-500">
-      오픈소스 Leaflet 지도를 불러오는 중입니다...
+    <div className="flex h-[420px] items-center justify-center rounded-2xl border border-slate-200 bg-white text-sm text-slate-500">
+      지도를 불러오는 중입니다...
     </div>
   ),
 });
@@ -65,10 +66,12 @@ export function LocalSpaceApp({
   const [candidateB, setCandidateB] = useState<CandidateProperty>(
     initialPreset.candidateB
   );
+  const [editingSlot, setEditingSlot] = useState<'A' | 'B' | null>(null);
 
   const [aiResponse, setAiResponse] = useState<AiAnalyzeResponse | null>(null);
   const [aiLoading, setAiLoading] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [printedAt, setPrintedAt] = useState<string>('');
   const [checklistProgress, setChecklistProgress] = useState<ChecklistProgressMap>(
     () => {
       if (typeof window === 'undefined') return {};
@@ -85,7 +88,6 @@ export function LocalSpaceApp({
 
   const requestSeqRef = useRef(0);
 
-  // 정량 비교 엔진 실시간 산출
   const comparison = useMemo(
     () => compareCandidates(candidateA, candidateB, criteria, stores, populations),
     [candidateA, candidateB, criteria, stores, populations]
@@ -170,7 +172,6 @@ export function LocalSpaceApp({
     [fetchAnalysis]
   );
 
-  // 최초 진입 시 기본 프리셋 1회 분석 자동 실행 (비동기 콜백에서만 state 갱신)
   useEffect(() => {
     let cancelled = false;
     const seq = ++requestSeqRef.current;
@@ -230,8 +231,6 @@ export function LocalSpaceApp({
     });
   };
 
-  const [printedAt, setPrintedAt] = useState<string>('');
-
   const handlePrintReport = () => {
     setPrintedAt(
       new Date().toLocaleDateString('ko-KR', {
@@ -243,83 +242,75 @@ export function LocalSpaceApp({
     window.setTimeout(() => window.print(), 30);
   };
 
+  const editingCandidate =
+    editingSlot === 'A' ? candidateA : editingSlot === 'B' ? candidateB : null;
+
   return (
     <>
       <div className="no-print min-h-screen flex flex-col bg-[#F2F4F8]">
-        {/* 상단 정밀 내비게이션 바 (한냥 Studio · 한냥 AirGuard 패밀리 룩: 한냥 엽전 로고 + 2대 뷰 탭) */}
+        {/* 슬림한 상단 내비게이션 바 (한냥 패밀리 룩) */}
         <header className="sticky top-0 z-30 border-b border-slate-200/90 bg-white/95 backdrop-blur-xs">
-          <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="mx-auto flex max-w-[1220px] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center">
-                <HannyangEmblem size={36} />
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-[17px] font-extrabold tracking-tight text-[#0F172A]">
-                    한냥 <span className="font-bold text-[#92400E]">LocalSpace</span>
-                  </h1>
-                  <span className="inline-flex items-center rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2.5 py-0.5 text-[11px] font-bold text-[#92400E]">
-                    창업 공간 비교
-                  </span>
-                  <span className="hidden rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 lg:inline-block">
-                    제1회 동양AI빅데이터융합 공모전 · 팀 호날두의 아이들
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-500">
-                  공공데이터와 실매물 조건·현장 메모를 연결한 예비 창업자 맞춤형 공간 비교 AI 플랫폼
-                </p>
+              <HannyangEmblem size={36} className="shrink-0" />
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-lg font-extrabold tracking-tight text-[#0F172A]">
+                  한냥 <span className="font-bold text-[#92400E]">LocalSpace</span>
+                </h1>
+                <span className="inline-flex items-center rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2.5 py-0.5 text-xs font-bold text-[#92400E]">
+                  창업 공간 비교
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* 탭 전환 */}
+            <div className="flex items-center gap-2.5">
               <nav
-                className="inline-flex rounded-lg border border-slate-200 bg-slate-100 p-0.5"
+                className="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1"
                 aria-label="주요 화면 탭"
               >
                 <button
                   id="tab-dashboard"
                   type="button"
                   onClick={() => setActiveTab('dashboard')}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition sm:text-sm ${
                     activeTab === 'dashboard'
                       ? 'bg-white text-slate-900 shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <LayoutDashboard className="h-3.5 w-3.5" />
-                  공간 비교 대시보드
+                  <LayoutDashboard className="h-4 w-4" />
+                  공간 비교
                 </button>
                 <button
                   id="tab-verification"
                   type="button"
                   onClick={() => setActiveTab('verification')}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition sm:text-sm ${
                     activeTab === 'verification'
                       ? 'bg-white text-slate-900 shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <BarChart2 className="h-3.5 w-3.5" />
-                  데이터 검증 & 차트
+                  <BarChart2 className="h-4 w-4" />
+                  차트 · 증빙 데이터
                 </button>
               </nav>
 
               <button
                 type="button"
                 onClick={handlePrintReport}
-                className="hidden items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 transition hover:bg-slate-50 md:inline-flex"
+                className="hidden items-center gap-1.5 rounded-xl bg-[#0B0F17] px-3.5 py-2 text-xs font-bold text-white transition hover:bg-slate-800 md:inline-flex"
               >
                 <Printer className="h-3.5 w-3.5" />
-                상담 리포트 인쇄
+                리포트 인쇄
               </button>
             </div>
           </div>
         </header>
 
-        {/* 메인 컨텐츠 */}
-        <main className="mx-auto w-full max-w-[1440px] flex-1 space-y-4 px-4 py-5 sm:px-6">
-          {/* 상시 노출 프리셋 + 창업 기준 */}
+        {/* 메인 컨텐츠 (읽기 편한 1220px 폭 + 넉넉한 여백 + 3단계 흐름) */}
+        <main className="mx-auto w-full max-w-[1220px] flex-1 space-y-6 px-4 py-6 sm:px-6">
+          {/* STEP 1: 시나리오 선택 + 내 창업 기준 */}
           <CriteriaAndPresetBar
             activePresetId={activePresetId}
             criteria={criteria}
@@ -328,7 +319,7 @@ export function LocalSpaceApp({
             onResetCurrentPreset={handleResetCurrentPreset}
           />
 
-          {/* 필수 노출 3종 가드레일 배지 */}
+          {/* 데이터 해석 안내 및 업종 상이 경고 */}
           <GuardrailStrip
             meta={meta}
             radiusMeters={criteria.radiusMeters}
@@ -340,17 +331,15 @@ export function LocalSpaceApp({
 
           {activeTab === 'dashboard' ? (
             <>
-              {/* 모듈 B + C: 후보 A vs 후보 B 병렬 비교 보드 */}
+              {/* STEP 2: 후보 A vs B 한눈에 비교 카드 + 격차 비교표 */}
               <CandidateComparisonBoard
                 candidateA={candidateA}
                 candidateB={candidateB}
                 comparison={comparison}
-                populations={populations}
-                onChangeA={setCandidateA}
-                onChangeB={setCandidateB}
+                onEditCandidate={setEditingSlot}
               />
 
-              {/* 모듈 B: 오픈소스 Leaflet 반경 지도 */}
+              {/* 오픈소스 Leaflet 반경 지도 */}
               <ComparisonMap
                 candidateA={candidateA}
                 candidateB={candidateB}
@@ -358,7 +347,7 @@ export function LocalSpaceApp({
                 radiusMeters={criteria.radiusMeters}
               />
 
-              {/* 모듈 D: 근거 기반 AI 비교·검증 & 체크리스트 */}
+              {/* STEP 3: AI 핵심 요약 & 임대인 확인 체크리스트 */}
               <AiVerificationPanel
                 response={aiResponse}
                 loading={aiLoading}
@@ -371,7 +360,7 @@ export function LocalSpaceApp({
               />
             </>
           ) : (
-            /* 모듈 E: 데이터 검증·고해상도 차트·원본 데이터 표·analysis.R 모달 */
+            /* 차트 · 원본 데이터 · R 스크립트 증빙 탭 */
             <DataVerificationTab
               candidateA={candidateA}
               candidateB={candidateB}
@@ -385,20 +374,37 @@ export function LocalSpaceApp({
         </main>
 
         {/* 푸터 */}
-        <footer className="mt-8 border-t border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-2 px-4 py-4 text-[11px] text-slate-500 sm:px-6">
+        <footer className="mt-10 border-t border-slate-200 bg-white">
+          <div className="mx-auto flex max-w-[1220px] flex-wrap items-center justify-between gap-2 px-4 py-5 text-xs text-slate-500 sm:px-6">
             <div className="flex items-center gap-2">
-              <HannyangEmblem size={18} />
+              <HannyangEmblem size={20} />
               <span>
-                <strong className="text-slate-800">한냥 LocalSpace</strong> (Hannyang 시리즈) · 제1회 동양AI빅데이터융합 아이디어 공모전 출품 프로토타입 (팀명: 호날두의 아이들)
+                <strong className="text-slate-800">한냥 LocalSpace</strong> · 제1회 동양AI빅데이터융합 아이디어 공모전 (팀명: 호날두의 아이들)
               </span>
             </div>
             <div>
-              근거 없는 매출·성공률 예측 배제 · 공공 상권({meta.totalCommercialRows}건 샘플 인덱스) & 행정동 거주인구({meta.totalAdminDongs}개 구역)
+              공공 상권({meta.totalCommercialRows}건) · 행정동 거주인구({meta.totalAdminDongs}개 구역) · 근거 없는 매출·순위 예측 배제
             </div>
           </div>
         </footer>
       </div>
+
+      {/* 후보 A / B 조건·임장 메모 슬라이드 편집 드로어 */}
+      {editingCandidate && (
+        <CandidateEditModal
+          candidate={editingCandidate}
+          populations={populations}
+          onChange={(next) => {
+            if (editingSlot === 'A') setCandidateA(next);
+            else if (editingSlot === 'B') setCandidateB(next);
+          }}
+          onClose={() => setEditingSlot(null)}
+          onCloseAndReanalyze={() => {
+            setEditingSlot(null);
+            void runAnalysis(criteria, candidateA, candidateB);
+          }}
+        />
+      )}
 
       {/* A4 인쇄/PDF 저장 전용 상담 리포트 뷰 */}
       <PrintConsultationReport
