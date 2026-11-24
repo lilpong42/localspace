@@ -1,0 +1,22 @@
+{
+  "name": "한냥 LocalSpace — 창업 공간 비교 AI",
+  "short_name": "한냥 LocalSpace",
+  "description": "공공 상권·거주인구 데이터와 실매물 조건·현장 메모를 한 화면에서 비교하는 예비 창업자 맞춤형 공간 비교 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F4F8",
+  "theme_color": "#0B0F17",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
