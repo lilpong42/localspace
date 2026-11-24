@@ -145,8 +145,17 @@ export default function ComparisonMap({
       map.invalidateSize();
     }, 150);
 
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+      observer = new ResizeObserver(() => {
+        map.invalidateSize();
+      });
+      observer.observe(containerRef.current);
+    }
+
     return () => {
       window.clearTimeout(resizeTimer);
+      observer?.disconnect();
       map.remove();
       mapRef.current = null;
       layerGroupRef.current = null;
@@ -312,12 +321,12 @@ export default function ComparisonMap({
   };
 
   return (
-    <div className="relative h-full min-h-[460px] w-full overflow-hidden rounded-2xl border border-slate-200/90 bg-slate-100 shadow-xs lg:rounded-none lg:border-0 lg:shadow-none">
+    <div className="absolute inset-0 overflow-hidden bg-slate-100">
       {/* 실제 Leaflet 캔버스 */}
       <div
         ref={containerRef}
         id="localspace-leaflet-map"
-        className={`h-full w-full ${pickMode ? 'cursor-crosshair' : ''}`}
+        className={`absolute inset-0 h-full w-full ${pickMode ? 'cursor-crosshair' : ''}`}
       />
 
       {/* 플로팅 상단 좌측: 지도 위 주소 바로 검색 */}

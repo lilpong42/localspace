@@ -658,7 +658,7 @@ export function WorkspaceView({
       </aside>
 
       {/* 우측 풀하이트 실시간 인터랙티브 지도 */}
-      <div className="h-[460px] w-full shrink-0 lg:h-full lg:flex-1">
+      <div className="relative h-[460px] w-full lg:h-[calc(100vh-57px)] lg:min-w-0 lg:flex-1">
         {mapSlot}
       </div>
     </div>
