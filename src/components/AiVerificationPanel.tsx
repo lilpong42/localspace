@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Square,
 } from 'lucide-react';
+import { useState } from 'react';
 import type { AiAnalyzeResponse } from '@/lib/types';
 
 export interface ChecklistItemProgress {
@@ -33,6 +34,8 @@ export function getChecklistItemKey(index: number, question: string): string {
   return `${index}:${question.slice(0, 24)}`;
 }
 
+type TargetFilter = 'ALL' | '공통' | '후보 A' | '후보 B';
+
 export function AiVerificationPanel({
   response,
   loading,
@@ -43,6 +46,9 @@ export function AiVerificationPanel({
   onReanalyze,
   onPrintReport,
 }: AiVerificationPanelProps) {
+  const [targetFilter, setTargetFilter] = useState<TargetFilter>('ALL');
+  const [onlyUnchecked, setOnlyUnchecked] = useState(false);
+
   const analysis = response?.analysis ?? null;
   const checklist = analysis?.landlord_checklist ?? [];
   const completedCount = checklist.filter(
@@ -51,20 +57,28 @@ export function AiVerificationPanel({
   const progressPct =
     checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0;
 
+  const filteredChecklist = checklist
+    .map((item, idx) => ({ item, idx, key: getChecklistItemKey(idx, item.question) }))
+    .filter(({ item, key }) => {
+      if (targetFilter !== 'ALL' && item.target !== targetFilter) return false;
+      if (onlyUnchecked && checklistProgress[key]?.checked) return false;
+      return true;
+    });
+
   return (
     <section
-      className="rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs sm:p-6"
+      className="hannyang-card rounded-[20px] p-5 sm:p-6"
       aria-label="근거 기반 AI 비교·검증 및 임대인 확인 체크리스트"
     >
-      {/* STEP 3 헤더 */}
+      {/* 헤더 */}
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-[#0B0F17] px-2.5 py-0.5 text-[11px] font-bold tracking-wide text-amber-300">
-              STEP 3
+              AI · 임장노트
             </span>
-            <h2 className="text-base font-bold text-slate-900 sm:text-lg">
-              AI 핵심 요약 & 현장 재방문 체크리스트
+            <h2 className="text-base font-extrabold text-slate-900 sm:text-lg">
+              근거 기반 AI 핵심 요약 & 집주인 질문 체크리스트
             </h2>
             {response && (
               <span
@@ -87,7 +101,7 @@ export function AiVerificationPanel({
             )}
           </div>
           <p className="mt-1.5 text-sm text-slate-500">
-            입력한 조건·현장 메모·공공통계만 근거로 핵심 차이와 임대인에게 꼭 물어볼 질문을 정리했습니다.
+            매출·성공률 추측 없이, 입력한 매물 조건·현장 메모·공공통계만 근거로 핵심 차이와 계약 전 확인 질문을 정리했습니다.
           </p>
         </div>
 
@@ -134,8 +148,8 @@ export function AiVerificationPanel({
         <div className="mt-5 space-y-6">
           {/* 1. 핵심 차이 3줄 요약 */}
           <div className="rounded-2xl border border-slate-200/80 bg-slate-50/70 p-5">
-            <h3 className="text-sm font-bold text-slate-900">
-              핵심 차이 3줄 요약
+            <h3 className="text-sm font-extrabold text-slate-900">
+              후보 A vs B 핵심 차이 3줄 요약
             </h3>
             <ul className="mt-3 space-y-3">
               {analysis.tradeoff_summary.map((line, i) => (
@@ -155,7 +169,7 @@ export function AiVerificationPanel({
           {/* 2. 후보별 꼭 확인할 리스크 */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-blue-200/70 bg-blue-50/35 p-5">
-              <div className="flex items-center gap-2 text-sm font-bold text-blue-900">
+              <div className="flex items-center gap-2 text-sm font-extrabold text-blue-900">
                 <AlertTriangle className="h-4 w-4 text-blue-600" />
                 후보 A · 꼭 확인할 리스크
               </div>
@@ -173,7 +187,7 @@ export function AiVerificationPanel({
             </div>
 
             <div className="rounded-2xl border border-emerald-200/70 bg-emerald-50/35 p-5">
-              <div className="flex items-center gap-2 text-sm font-bold text-emerald-900">
+              <div className="flex items-center gap-2 text-sm font-extrabold text-emerald-900">
                 <AlertTriangle className="h-4 w-4 text-emerald-600" />
                 후보 B · 꼭 확인할 리스크
               </div>
@@ -191,34 +205,62 @@ export function AiVerificationPanel({
             </div>
           </div>
 
-          {/* 3. 현장 재방문 임대인·중개사 확인 체크리스트 */}
+          {/* 3. 인터랙티브 현장 재방문 체크리스트 + 타깃 필터 */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <ClipboardList className="h-5 w-5 text-slate-800" />
-                <h3 className="text-sm font-bold text-slate-900 sm:text-base">
-                  임대인·중개사에게 꼭 물어볼 질문 체크리스트
+                <h3 className="text-sm font-extrabold text-slate-900 sm:text-base">
+                  임대인·중개사 현장 확인 체크리스트
                 </h3>
               </div>
               <div className="flex items-center gap-2.5">
-                <div className="h-2 w-24 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2 w-28 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className="h-full rounded-full bg-emerald-600 transition-all"
+                    className="h-full rounded-full bg-emerald-600 transition-all duration-300"
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
-                <span className="text-xs font-bold tabular-nums text-slate-700">
-                  {completedCount} / {checklist.length} 완료
+                <span className="font-mono text-xs font-bold tabular-nums text-slate-700">
+                  {completedCount}/{checklist.length} 완료 ({progressPct}%)
                 </span>
               </div>
             </div>
-            <p className="mt-1 text-xs text-slate-500">
-              현장에서 확인한 항목을 체크하고 답변을 적어두세요. 브라우저에 자동 저장되며 A4 리포트에도 함께 인쇄됩니다.
-            </p>
+
+            {/* 필터 필 바 */}
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(['ALL', '공통', '후보 A', '후보 B'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setTargetFilter(tab)}
+                    className={`rounded-full px-3 py-1 text-xs font-bold transition ${
+                      targetFilter === tab
+                        ? 'bg-[#0B0F17] text-amber-300'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                  >
+                    {tab === 'ALL' ? '전체 질문' : tab}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setOnlyUnchecked((v) => !v)}
+                className={`rounded-full border px-3 py-1 text-xs font-bold transition ${
+                  onlyUnchecked
+                    ? 'border-blue-300 bg-blue-50 text-blue-800'
+                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {onlyUnchecked ? '미확인만 보는 중' : '미확인만 보기'}
+              </button>
+            </div>
 
             <div className="mt-4 space-y-3">
-              {checklist.map((item, idx) => {
-                const key = getChecklistItemKey(idx, item.question);
+              {filteredChecklist.map(({ item, idx, key }) => {
                 const state = checklistProgress[key] ?? {
                   checked: false,
                   answerMemo: '',
@@ -285,7 +327,7 @@ export function AiVerificationPanel({
                           type="text"
                           value={state.answerMemo}
                           onChange={(e) => onChangeAnswerMemo(key, e.target.value)}
-                          placeholder="현장 답변 메모 (예: 임대인 1개월 렌트프리 협의 가능)"
+                          placeholder="현장 답변 메모 기록 (브라우저 자동 저장 · A4 리포트 반영)"
                           className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-500"
                         />
                       </div>
@@ -293,6 +335,12 @@ export function AiVerificationPanel({
                   </div>
                 );
               })}
+
+              {filteredChecklist.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-200 py-8 text-center text-xs text-slate-400">
+                  선택한 필터 조건에 해당하는 질문이 없습니다.
+                </div>
+              )}
             </div>
           </div>
 

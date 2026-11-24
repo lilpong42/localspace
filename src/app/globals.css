@@ -1,51 +1,165 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
 :root {
+  color-scheme: light;
   --background: #f2f4f8;
   --foreground: #0f172a;
+  --brand-ink: #0b0f17;
+  --brand-gold: #d97706;
+  --brand-gold-deep: #92400e;
+  --brand-gold-soft: #fffbeb;
+  --brand-gold-border: #fde68a;
+  --shadow-panel:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 30px -14px rgba(15, 23, 42, 0.09);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-noto-sans-kr), "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: "Pretendard", var(--font-noto-sans-kr), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
+  background-image: radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.95), transparent 55%);
   color: var(--foreground);
   font-family: var(--font-sans);
+  letter-spacing: -0.016em;
   font-feature-settings: "tnum" 1;
+  -webkit-font-smoothing: antialiased;
 }
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
 
-/* Leaflet custom overrides for clean operational styling */
+/* Hannyang Ceramic Elevated Card */
+.hannyang-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: var(--shadow-panel);
+}
+
+/* Subtle Brand Emblem Rotation */
+.brand-lockup:hover .brand-emblem-spin {
+  transform: rotate(12deg);
+}
+
+.brand-emblem-spin {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 2px 5px rgba(146, 64, 14, 0.25));
+}
+
+/* Sleek App Custom Scrollbars */
+.app-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.app-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 999px;
+}
+
+.app-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.45);
+}
+
+/* Clean Range Sliders */
+input[type="range"].app-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  outline: none;
+}
+
+input[type="range"].app-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #0b0f17;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.3);
+  cursor: pointer;
+  transition: transform 0.14s ease;
+}
+
+input[type="range"].app-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.12);
+}
+
+/* Leaflet Custom Overrides */
 .leaflet-container {
   font-family: var(--font-sans);
-  background: #f1f5f9;
+  background: #eef2f6;
   z-index: 1;
 }
 
-#localspace-leaflet-map .leaflet-tile-pane {
+#localspace-leaflet-map.map-light-tiles .leaflet-tile-pane {
   filter: saturate(76%) brightness(102%) contrast(97%);
 }
 
+#localspace-leaflet-map.map-dark-tiles .leaflet-tile-pane {
+  filter: invert(96%) hue-rotate(180deg) brightness(92%) contrast(94%) saturate(75%);
+}
+
 .leaflet-popup-content-wrapper {
-  border-radius: 10px;
-  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.14);
-  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  box-shadow: 0 14px 32px -8px rgba(15, 23, 42, 0.22);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 0;
 }
 
 .leaflet-popup-content {
-  margin: 10px 12px;
-  font-size: 12px;
+  margin: 12px 14px;
+  font-size: 12.5px;
   line-height: 1.5;
   color: #0f172a;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.16) !important;
+}
+
+.leaflet-control-zoom a {
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+/* PropTech Price-Bubble Map Pin Animation */
+@keyframes pinPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(37, 99, 235, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
+.pin-bubble-active {
+  animation: pinPulse 2s infinite;
 }
 
 /* Print / A4 Consultation Report Styles */
@@ -58,6 +172,7 @@ body {
   html,
   body {
     background: #ffffff !important;
+    background-image: none !important;
     color: #0f172a !important;
     font-size: 11px !important;
     -webkit-print-color-adjust: exact !important;
@@ -75,10 +190,5 @@ body {
   .print-break-avoid {
     break-inside: avoid;
     page-break-inside: avoid;
-  }
-
-  .print-break-before {
-    break-before: page;
-    page-break-before: always;
   }
 }

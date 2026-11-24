@@ -7,6 +7,7 @@ import {
   Bot,
   Map as MapIcon,
   Printer,
+  Share2,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -25,11 +26,13 @@ import {
   type SavedComparisonRecord,
 } from '@/components/SavedComparisonsDrawer';
 import { WorkspaceView } from '@/components/WorkspaceView';
-import { compareCandidates } from '@/lib/compareEngine';
+import { compareCandidates, formatSigned } from '@/lib/compareEngine';
 import { PRESET_SCENARIOS } from '@/lib/presets';
 import {
+  PROPERTY_CATALOG,
   autoMatchPairForCriteria,
   rankCatalogByCriteria,
+  type CatalogListing,
   type MatchedCatalogItem,
 } from '@/lib/propertyCatalog';
 import type {
@@ -84,6 +87,7 @@ export function LocalSpaceApp({
     initialPreset.candidateB
   );
   const [editingSlot, setEditingSlot] = useState<'A' | 'B' | null>(null);
+  const [focusedSlot, setFocusedSlot] = useState<'A' | 'B' | null>('A');
   const [showSavedDrawer, setShowSavedDrawer] = useState(false);
   const [focusRequest, setFocusRequest] = useState<MapFocusRequest | null>(null);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -124,6 +128,18 @@ export function LocalSpaceApp({
     setToastMsg(msg);
     if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
     toastTimerRef.current = window.setTimeout(() => setToastMsg(null), 2600);
+  }, []);
+
+  // Esc 키로 열린 서랍 닫기
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setEditingSlot(null);
+        setShowSavedDrawer(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
   const comparison = useMemo(
@@ -245,6 +261,7 @@ export function LocalSpaceApp({
     setCriteria({ ...preset.criteria });
     setCandidateA({ ...preset.candidateA });
     setCandidateB({ ...preset.candidateB });
+    setFocusedSlot('A');
     setChecklistProgress(readStoredChecklist(`${CHECKLIST_STORAGE_PREFIX}${preset.id}`));
     showToast(`${preset.shortLabel} · ${preset.title} 시나리오를 불러왔습니다`);
   };
@@ -259,16 +276,23 @@ export function LocalSpaceApp({
     setActivePresetId(null);
     setCandidateA(matched.candidateA);
     setCandidateB(matched.candidateB);
+    setFocusedSlot('A');
     setChecklistProgress(readStoredChecklist(`${CHECKLIST_STORAGE_PREFIX}custom`));
     showToast(`내 조건(${criteria.targetIndustry})에 맞는 후보 A·B 2곳을 자동 매칭했습니다`);
   };
 
-  const handleApplyCatalogToSlot = (slot: 'A' | 'B', item: MatchedCatalogItem) => {
+  const handleApplyCatalogListing = (slot: 'A' | 'B', listing: CatalogListing) => {
     setActivePresetId(null);
-    const nextCandidate: CandidateProperty = { ...item.listing, slot };
+    const nextCandidate: CandidateProperty = { ...listing, slot };
     if (slot === 'A') setCandidateA(nextCandidate);
     else setCandidateB(nextCandidate);
-    showToast(`후보 ${slot}를 [${item.listing.name}]으로 교체했습니다`);
+    setFocusedSlot(slot);
+    setFocusRequest({ slot, nonce: Date.now() });
+    showToast(`후보 ${slot}를 [${listing.name}]으로 교체했습니다`);
+  };
+
+  const handleApplyCatalogToSlot = (slot: 'A' | 'B', item: MatchedCatalogItem) => {
+    handleApplyCatalogListing(slot, item.listing);
   };
 
   const handleSwapCandidates = () => {
@@ -295,11 +319,32 @@ export function LocalSpaceApp({
     });
     if (slot === 'A') setCandidateA(updater);
     else setCandidateB(updater);
+    setFocusedSlot(slot);
     showToast(`지도에서 후보 ${slot} 위치를 이동하고 반경 상권을 재집계했습니다`);
   };
 
   const handleFocusMap = (slot: MapFocusRequest['slot']) => {
+    if (slot === 'A' || slot === 'B') setFocusedSlot(slot);
     setFocusRequest({ slot, nonce: Date.now() });
+  };
+
+  const handleCopyShareSummary = async () => {
+    const lines = [
+      `[한냥 LocalSpace 창업 공간 비교 요약]`,
+      `• 내 기준: ${criteria.targetIndustry} / 보증금 ≤ ${criteria.maxDeposit}만 / 월세 ≤ ${criteria.maxMonthlyRent}만 / 면적 ≥ ${criteria.minAreaPyeong}평`,
+      `• 후보 A: ${candidateA.name} (${candidateA.industry} · ${candidateA.areaPyeong}평 · 월 ${comparison.evalA.monthlyFixedCost}만 · 동종 ${comparison.evalA.commercial.sameIndustryCount}곳)`,
+      `• 후보 B: ${candidateB.name} (${candidateB.industry} · ${candidateB.areaPyeong}평 · 월 ${comparison.evalB.monthlyFixedCost}만 · 동종 ${comparison.evalB.commercial.sameIndustryCount}곳)`,
+      `• 핵심 격차(B−A): 월 고정비 ${formatSigned(comparison.diffs.fixedCostDiff, '만원')}, 면적 ${formatSigned(comparison.diffs.areaPyeongDiff, '평')}`,
+      ...(aiResponse?.analysis.tradeoff_summary.slice(0, 2).map((t, i) => `• 요약 ${i + 1}: ${t}`) ?? []),
+      `※ 거주 배후인구 참고자료(유동인구 아님) · 근거 없는 매출·순위 예측 제외`,
+    ].join('\n');
+
+    try {
+      await navigator.clipboard.writeText(lines);
+      showToast('비교 요약을 클립보드에 복사했습니다 (카톡·메모에 바로 붙여넣기)');
+    } catch {
+      showToast('클립보드 복사를 지원하지 않는 환경입니다');
+    }
   };
 
   const handleSaveComparison = (title: string) => {
@@ -371,18 +416,20 @@ export function LocalSpaceApp({
 
   return (
     <>
-      <div className="no-print flex min-h-screen flex-col bg-[#F2F4F8]">
-        {/* 슬림한 네이티브 앱 상단 바 (56px) */}
-        <header className="sticky top-0 z-30 h-[57px] border-b border-slate-200/90 bg-white/95 backdrop-blur-xs">
-          <div className="mx-auto flex h-full max-w-[1600px] items-center justify-between gap-3 px-4">
-            {/* 브랜드 */}
-            <div className="flex items-center gap-2.5">
-              <HannyangEmblem size={32} className="shrink-0" />
+      <div className="no-print flex min-h-screen flex-col">
+        {/* Frosted Ceramic Top App Bar (57px) */}
+        <header className="sticky top-0 z-30 h-[57px] border-b border-slate-200/80 bg-white/90 backdrop-blur-lg">
+          <div className="mx-auto flex h-full max-w-[1680px] items-center justify-between gap-3 px-4">
+            {/* 한냥 브랜드 락업 (호버 시 엽전 엠블럼 회전) */}
+            <div className="brand-lockup flex items-center gap-2.5 cursor-default">
+              <div className="brand-emblem-spin shrink-0">
+                <HannyangEmblem size={34} />
+              </div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base font-extrabold tracking-tight text-[#0F172A] sm:text-[17px]">
                   한냥 <span className="font-bold text-[#92400E]">LocalSpace</span>
                 </h1>
-                <span className="hidden rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-bold text-[#92400E] sm:inline-flex">
+                <span className="hidden rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2.5 py-0.5 text-[11px] font-bold text-[#92400E] sm:inline-flex">
                   창업 공간 비교
                 </span>
               </div>
@@ -390,7 +437,7 @@ export function LocalSpaceApp({
 
             {/* 중앙 앱 화면 전환 탭 (데스크톱) */}
             <nav
-              className="hidden items-center rounded-xl border border-slate-200 bg-slate-100 p-1 md:inline-flex"
+              className="hidden items-center rounded-xl border border-slate-200/80 bg-[#EFF2F6] p-1 md:inline-flex"
               aria-label="앱 주요 화면 전환"
             >
               <button
@@ -399,7 +446,7 @@ export function LocalSpaceApp({
                 onClick={() => setActiveTab('workspace')}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
                   activeTab === 'workspace'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-white text-[#0F172A] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -412,14 +459,14 @@ export function LocalSpaceApp({
                 onClick={() => setActiveTab('ai')}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
                   activeTab === 'ai'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-white text-[#0F172A] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 <Bot className="h-3.5 w-3.5" />
                 AI · 임장노트
                 {checklistItems.length > 0 && (
-                  <span className="rounded-full bg-amber-100 px-1.5 py-0.2 text-[10px] font-extrabold tabular-nums text-[#92400E]">
+                  <span className="rounded-full bg-[#FFFBEB] border border-[#FDE68A] px-1.5 text-[10px] font-extrabold tabular-nums text-[#92400E]">
                     {checkedCount}/{checklistItems.length}
                   </span>
                 )}
@@ -430,7 +477,7 @@ export function LocalSpaceApp({
                 onClick={() => setActiveTab('data')}
                 className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
                   activeTab === 'data'
-                    ? 'bg-white text-slate-900 shadow-xs'
+                    ? 'bg-white text-[#0F172A] shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -440,7 +487,17 @@ export function LocalSpaceApp({
             </nav>
 
             {/* 우측 앱 액션 */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <button
+                type="button"
+                onClick={() => void handleCopyShareSummary()}
+                title="비교 요약 텍스트 복사"
+                className="hidden h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50 lg:inline-flex"
+              >
+                <Share2 className="h-3.5 w-3.5 text-slate-500" />
+                요약 복사
+              </button>
+
               <button
                 id="btn-open-saved"
                 type="button"
@@ -459,7 +516,7 @@ export function LocalSpaceApp({
               <button
                 type="button"
                 onClick={handlePrintReport}
-                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#0B0F17] px-3 text-xs font-bold text-white transition hover:bg-slate-800"
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-[#0B0F17] px-3.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
               >
                 <Printer className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">A4 리포트</span>
@@ -480,6 +537,7 @@ export function LocalSpaceApp({
             aiResponse={aiResponse}
             aiLoading={aiLoading}
             meta={meta}
+            focusedSlot={focusedSlot}
             onSelectPreset={handleSelectPreset}
             onChangeCriteria={handleChangeCriteria}
             onAutoMatchByCriteria={handleAutoMatchByCriteria}
@@ -495,10 +553,14 @@ export function LocalSpaceApp({
                 comparison={comparison}
                 radiusMeters={criteria.radiusMeters}
                 populations={populations}
+                catalogListings={PROPERTY_CATALOG}
+                focusedSlot={focusedSlot}
                 focusRequest={focusRequest}
                 onChangeRadius={(r) =>
                   handleChangeCriteria({ ...criteria, radiusMeters: r })
                 }
+                onSelectSlot={setFocusedSlot}
+                onApplyCatalogFromMap={handleApplyCatalogListing}
                 onPickCoordinate={handlePickCoordinate}
               />
             }
@@ -552,7 +614,7 @@ export function LocalSpaceApp({
 
         {/* 모바일 네이티브 하단 탭 바 */}
         <nav
-          className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-t border-slate-200 bg-white/95 backdrop-blur-xs md:hidden"
+          className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-4 border-t border-slate-200 bg-white/95 backdrop-blur-md md:hidden"
           aria-label="모바일 하단 앱 탭"
         >
           <button
