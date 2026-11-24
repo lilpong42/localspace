@@ -19,9 +19,11 @@ import type {
   CandidateProperty,
   ComparisonSummary,
   StatusLevel,
+  UserCriteria,
 } from '@/lib/types';
 
 interface CandidateComparisonBoardProps {
+  criteria: UserCriteria;
   candidateA: CandidateProperty;
   candidateB: CandidateProperty;
   comparison: ComparisonSummary;
@@ -59,13 +61,27 @@ function StatusPill({
   );
 }
 
+function kpiBoxStyle(status: StatusLevel | undefined): string {
+  if (status === 'fail') return 'border-rose-200 bg-rose-50/60';
+  if (status === 'warn') return 'border-amber-200 bg-amber-50/60';
+  return 'border-emerald-200/70 bg-emerald-50/35';
+}
+
+function kpiDeltaColor(status: StatusLevel | undefined): string {
+  if (status === 'fail') return 'text-rose-700 font-bold';
+  if (status === 'warn') return 'text-amber-700 font-bold';
+  return 'text-emerald-700 font-semibold';
+}
+
 interface CandidateSummaryCardProps {
+  criteria: UserCriteria;
   candidate: CandidateProperty;
   evaluation: CandidateEvaluation;
   onEdit: () => void;
 }
 
 function CandidateSummaryCard({
+  criteria,
   candidate,
   evaluation,
   onEdit,
@@ -79,6 +95,14 @@ function CandidateSummaryCard({
 
   const pop = evaluation.population;
   const youngPct = pop ? (pop.age20Pct + pop.age30Pct).toFixed(1) : null;
+
+  const rentCheck = evaluation.checks.find((c) => c.key === 'monthlyRent');
+  const areaCheck = evaluation.checks.find((c) => c.key === 'area');
+  const depositCheck = evaluation.checks.find((c) => c.key === 'deposit');
+
+  const rentDelta = candidate.monthlyRent - criteria.maxMonthlyRent;
+  const areaDelta = Math.round((candidate.areaPyeong - criteria.minAreaPyeong) * 10) / 10;
+  const depositDelta = candidate.deposit - criteria.maxDeposit;
 
   return (
     <article
@@ -94,11 +118,25 @@ function CandidateSummaryCard({
             >
               {candidate.slot}
             </span>
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+            <span
+              className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
+                candidate.industry === criteria.targetIndustry
+                  ? 'bg-slate-100 text-slate-700'
+                  : 'bg-amber-100 text-amber-800'
+              }`}
+            >
               {candidate.industry}
+              {candidate.industry !== criteria.targetIndustry ? ' (희망 업종과 상이)' : ''}
             </span>
-            <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
+            <span
+              className={`rounded-md px-2 py-0.5 text-xs font-semibold ${
+                criteria.requireFirstFloor && candidate.floor !== '1층'
+                  ? 'bg-rose-100 text-rose-700'
+                  : 'bg-slate-100 text-slate-700'
+              }`}
+            >
               {candidate.floor}
+              {criteria.requireFirstFloor && candidate.floor !== '1층' ? ' (1층 미충족)' : ''}
             </span>
           </div>
           <h3 className="mt-2 text-lg font-bold tracking-tight text-slate-900">
@@ -117,47 +155,53 @@ function CandidateSummaryCard({
           className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
         >
           <Pencil className="h-3.5 w-3.5" />
-          조건·메모 수정
+          직접 수정
         </button>
       </div>
 
-      {/* 핵심 숫자 3개 (큰 글씨로 한눈에 비교) */}
+      {/* 핵심 숫자 3개 — 내 기준 대비 충족/초과 상태를 색상·격차로 즉각 표시 */}
       <div className="mt-5 grid grid-cols-3 gap-2.5">
-        <div className="rounded-xl bg-slate-50 p-3.5">
-          <div className="text-xs font-medium text-slate-500">월 고정비</div>
+        <div className={`rounded-xl border p-3.5 transition ${kpiBoxStyle(rentCheck?.status)}`}>
+          <div className="text-xs font-medium text-slate-600">월 고정비</div>
           <div className="mt-1 text-xl font-extrabold tabular-nums text-slate-900 sm:text-2xl">
             {evaluation.monthlyFixedCost.toLocaleString()}
             <span className="ml-0.5 text-xs font-semibold text-slate-500">만원</span>
           </div>
-          <div className="mt-1 text-[11px] tabular-nums text-slate-500">
-            평당 {evaluation.costPerPyeong}만원
+          <div className={`mt-1 text-[11px] tabular-nums ${kpiDeltaColor(rentCheck?.status)}`}>
+            {rentDelta > 0
+              ? `월세 기준 +${rentDelta.toLocaleString()}만 초과`
+              : `월세 기준 ${Math.abs(rentDelta).toLocaleString()}만 여유`}
           </div>
         </div>
 
-        <div className="rounded-xl bg-slate-50 p-3.5">
-          <div className="text-xs font-medium text-slate-500">전용면적</div>
+        <div className={`rounded-xl border p-3.5 transition ${kpiBoxStyle(areaCheck?.status)}`}>
+          <div className="text-xs font-medium text-slate-600">전용면적</div>
           <div className="mt-1 text-xl font-extrabold tabular-nums text-slate-900 sm:text-2xl">
             {candidate.areaPyeong}
             <span className="ml-0.5 text-xs font-semibold text-slate-500">평</span>
           </div>
-          <div className="mt-1 text-[11px] tabular-nums text-slate-500">
-            {evaluation.areaSqm}㎡
+          <div className={`mt-1 text-[11px] tabular-nums ${kpiDeltaColor(areaCheck?.status)}`}>
+            {areaDelta < 0
+              ? `기준보다 ${Math.abs(areaDelta)}평 부족`
+              : `기준 대비 +${areaDelta}평 여유`}
           </div>
         </div>
 
-        <div className="rounded-xl bg-slate-50 p-3.5">
-          <div className="text-xs font-medium text-slate-500">초기 투입금</div>
+        <div className={`rounded-xl border p-3.5 transition ${kpiBoxStyle(depositCheck?.status)}`}>
+          <div className="text-xs font-medium text-slate-600">보증금 · 초기금</div>
           <div className="mt-1 text-xl font-extrabold tabular-nums text-slate-900 sm:text-2xl">
-            {evaluation.initialOutlayTotal.toLocaleString()}
+            {candidate.deposit.toLocaleString()}
             <span className="ml-0.5 text-xs font-semibold text-slate-500">만원</span>
           </div>
-          <div className="mt-1 text-[11px] tabular-nums text-slate-500">
-            보증 {candidate.deposit.toLocaleString()} · 수리 {candidate.repairCost.toLocaleString()}
+          <div className={`mt-1 text-[11px] tabular-nums ${kpiDeltaColor(depositCheck?.status)}`}>
+            {depositDelta > 0
+              ? `보증금 +${depositDelta.toLocaleString()}만 초과`
+              : `총 초기금 ${evaluation.initialOutlayTotal.toLocaleString()}만`}
           </div>
         </div>
       </div>
 
-      {/* 내 기준 충족 여부 배지 (억지 총점/순위 없이 항목별 판정) */}
+      {/* 내 기준 충족 여부 배지 */}
       <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
@@ -211,13 +255,13 @@ function CandidateSummaryCard({
               </div>
             ))}
             <div className="pt-1 text-[11px] text-slate-400">
-              * 보증금 연 5% 환산 월 참고치: +{evaluation.depositConvertedMonthly}만원/월 (환산 월부담 {evaluation.totalEffectiveMonthlyRef.toLocaleString()}만원)
+              * 평당 월 고정비 {evaluation.costPerPyeong}만원/평 · 보증금 연 5% 환산 월 참고치 +{evaluation.depositConvertedMonthly}만원/월
             </div>
           </div>
         )}
       </div>
 
-      {/* 공공데이터 스냅샷 2줄 (상권 반경 vs 행정동 거주인구 명확 구분) */}
+      {/* 공공데이터 스냅샷 2줄 */}
       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         <div className="rounded-xl border border-slate-200/80 p-3">
           <div className="flex items-center justify-between text-xs text-slate-500">
@@ -267,7 +311,7 @@ function CandidateSummaryCard({
           현장 방문 메모
         </div>
         <p className="mt-1.5 text-[13px] leading-relaxed text-slate-700">
-          {candidate.fieldNotes || '현장 메모가 비어 있습니다. [조건·메모 수정]에서 기록해 보세요.'}
+          {candidate.fieldNotes || '현장 메모가 비어 있습니다. [직접 수정]에서 기록해 보세요.'}
         </p>
       </div>
     </article>
@@ -275,6 +319,7 @@ function CandidateSummaryCard({
 }
 
 export function CandidateComparisonBoard({
+  criteria,
   candidateA,
   candidateB,
   comparison,
@@ -302,7 +347,7 @@ export function CandidateComparisonBoard({
       a: `${candidateA.areaPyeong}평 (${evalA.areaSqm}㎡)`,
       b: `${candidateB.areaPyeong}평 (${evalB.areaSqm}㎡)`,
       diff: formatSigned(diffs.areaPyeongDiff, '평'),
-      sub: '실사용 전용면적 기준',
+      sub: `내 최소 기준 ${criteria.minAreaPyeong}평 대비 비교`,
     },
     {
       label: '초기 투입금 합계',
@@ -338,7 +383,7 @@ export function CandidateComparisonBoard({
             </h2>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            억지 순위 대신 핵심 비용·면적·상권·현장 메모를 나란히 대조합니다. 각 카드 오른쪽 버튼으로 내 매물 조건을 바로 수정할 수 있습니다.
+            위에서 바꾼 내 기준에 따라 초록(충족)·노랑(주의)·빨강(초과)으로 즉시 표시됩니다. 실제 알아본 매물이 있다면 [직접 수정]을 눌러 입력해 보세요.
           </p>
         </div>
       </div>
@@ -346,11 +391,13 @@ export function CandidateComparisonBoard({
       {/* 좌/우 핵심 요약 카드 */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <CandidateSummaryCard
+          criteria={criteria}
           candidate={candidateA}
           evaluation={evalA}
           onEdit={() => onEditCandidate('A')}
         />
         <CandidateSummaryCard
+          criteria={criteria}
           candidate={candidateB}
           evaluation={evalB}
           onEdit={() => onEditCandidate('B')}

@@ -16,6 +16,11 @@ import { HannyangEmblem } from '@/components/HannyangEmblem';
 import { PrintConsultationReport } from '@/components/PrintConsultationReport';
 import { compareCandidates } from '@/lib/compareEngine';
 import { PRESET_SCENARIOS } from '@/lib/presets';
+import {
+  autoMatchPairForCriteria,
+  rankCatalogByCriteria,
+  type MatchedCatalogItem,
+} from '@/lib/propertyCatalog';
 import type {
   AiAnalyzeResponse,
   CandidateProperty,
@@ -91,6 +96,11 @@ export function LocalSpaceApp({
   const comparison = useMemo(
     () => compareCandidates(candidateA, candidateB, criteria, stores, populations),
     [candidateA, candidateB, criteria, stores, populations]
+  );
+
+  const rankedCatalog = useMemo(
+    () => rankCatalogByCriteria(criteria, stores, populations),
+    [criteria, stores, populations]
   );
 
   const storageKey = `${STORAGE_PREFIX}${activePresetId ?? 'custom'}`;
@@ -172,32 +182,33 @@ export function LocalSpaceApp({
     [fetchAnalysis]
   );
 
+  // 기준이나 후보 A/B가 바뀌면 450ms 디바운스 후 AI 분석도 자동 갱신 (비동기 콜백에서만 state 변경)
   useEffect(() => {
     let cancelled = false;
     const seq = ++requestSeqRef.current;
-    fetchAnalysis(
-      initialPreset.criteria,
-      initialPreset.candidateA,
-      initialPreset.candidateB
-    )
-      .then((data) => {
-        if (!cancelled && seq === requestSeqRef.current) {
-          setAiResponse(data);
-          setAiError(null);
-        }
-      })
-      .catch(() => {
-        if (!cancelled && seq === requestSeqRef.current) {
-          setAiError(
-            '초기 분석 서버 호출 중 일시적 오류가 발생했습니다. 다시 시도해 주세요.'
-          );
-        }
-      });
+
+    const timer = window.setTimeout(() => {
+      fetchAnalysis(criteria, candidateA, candidateB)
+        .then((data) => {
+          if (!cancelled && seq === requestSeqRef.current) {
+            setAiResponse(data);
+            setAiError(null);
+          }
+        })
+        .catch(() => {
+          if (!cancelled && seq === requestSeqRef.current) {
+            setAiError(
+              '분석 서버 호출 중 일시적 오류가 발생했습니다. 다시 시도해 주세요.'
+            );
+          }
+        });
+    }, 380);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [fetchAnalysis, initialPreset]);
+  }, [criteria, candidateA, candidateB, fetchAnalysis]);
 
   const handleSelectPreset = (presetId: string) => {
     const preset = PRESET_SCENARIOS.find((p) => p.id === presetId);
@@ -207,12 +218,29 @@ export function LocalSpaceApp({
     setCandidateA({ ...preset.candidateA });
     setCandidateB({ ...preset.candidateB });
     setChecklistProgress(readStoredChecklist(`${STORAGE_PREFIX}${preset.id}`));
-    void runAnalysis(preset.criteria, preset.candidateA, preset.candidateB);
   };
 
-  const handleResetCurrentPreset = () => {
-    if (!activePresetId) return;
-    handleSelectPreset(activePresetId);
+  const handleChangeCriteria = (next: UserCriteria) => {
+    setActivePresetId(null);
+    setCriteria(next);
+  };
+
+  const handleAutoMatchByCriteria = () => {
+    const matched = autoMatchPairForCriteria(criteria, stores, populations);
+    setActivePresetId(null);
+    setCandidateA(matched.candidateA);
+    setCandidateB(matched.candidateB);
+    setChecklistProgress(readStoredChecklist(`${STORAGE_PREFIX}custom`));
+  };
+
+  const handleApplyCatalogToSlot = (
+    slot: 'A' | 'B',
+    item: MatchedCatalogItem
+  ) => {
+    setActivePresetId(null);
+    const nextCandidate: CandidateProperty = { ...item.listing, slot };
+    if (slot === 'A') setCandidateA(nextCandidate);
+    else setCandidateB(nextCandidate);
   };
 
   const handleToggleCheck = (itemKey: string) => {
@@ -308,15 +336,20 @@ export function LocalSpaceApp({
           </div>
         </header>
 
-        {/* 메인 컨텐츠 (읽기 편한 1220px 폭 + 넉넉한 여백 + 3단계 흐름) */}
+        {/* 메인 컨텐츠 */}
         <main className="mx-auto w-full max-w-[1220px] flex-1 space-y-6 px-4 py-6 sm:px-6">
-          {/* STEP 1: 시나리오 선택 + 내 창업 기준 */}
+          {/* STEP 1: 내 창업 조건 설정 + 자동 매칭 + 매물 풀 + 프리셋 */}
           <CriteriaAndPresetBar
             activePresetId={activePresetId}
             criteria={criteria}
+            candidateA={candidateA}
+            candidateB={candidateB}
+            comparison={comparison}
+            rankedCatalog={rankedCatalog}
             onSelectPreset={handleSelectPreset}
-            onChangeCriteria={setCriteria}
-            onResetCurrentPreset={handleResetCurrentPreset}
+            onChangeCriteria={handleChangeCriteria}
+            onAutoMatchByCriteria={handleAutoMatchByCriteria}
+            onApplyCatalogToSlot={handleApplyCatalogToSlot}
           />
 
           {/* 데이터 해석 안내 및 업종 상이 경고 */}
@@ -333,6 +366,7 @@ export function LocalSpaceApp({
             <>
               {/* STEP 2: 후보 A vs B 한눈에 비교 카드 + 격차 비교표 */}
               <CandidateComparisonBoard
+                criteria={criteria}
                 candidateA={candidateA}
                 candidateB={candidateB}
                 comparison={comparison}
@@ -360,7 +394,6 @@ export function LocalSpaceApp({
               />
             </>
           ) : (
-            /* 차트 · 원본 데이터 · R 스크립트 증빙 탭 */
             <DataVerificationTab
               candidateA={candidateA}
               candidateB={candidateB}
@@ -395,6 +428,7 @@ export function LocalSpaceApp({
           candidate={editingCandidate}
           populations={populations}
           onChange={(next) => {
+            setActivePresetId(null);
             if (editingSlot === 'A') setCandidateA(next);
             else if (editingSlot === 'B') setCandidateB(next);
           }}
